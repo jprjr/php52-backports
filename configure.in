@@ -985,7 +985,7 @@ if test "$PHP_CLI" = "no"; then
 fi
 
 PHP_ARG_WITH(pear, [whether to install PEAR],
-[  --with-pear=DIR         Install PEAR in DIR [PREFIX/lib/php]
+[  --with-pear=DIR         Install PEAR in DIR [PREFIX/lib/php5]
   --without-pear          Do not install PEAR], DEFAULT, yes)
 
 if test "$PHP_PEAR" != "no"; then
@@ -1019,7 +1019,7 @@ dnl
   if test "$PHP_PEAR" = "DEFAULT" || test "$PHP_PEAR" = "yes"; then
     case $PHP_LAYOUT in
       GNU) PEAR_INSTALLDIR=$datadir/pear;;
-      *)   PEAR_INSTALLDIR=$libdir/php;;
+      *)   PEAR_INSTALLDIR=$libdir/php5;;
     esac
   fi
 
@@ -1074,12 +1074,12 @@ test "$program_suffix" = "NONE" && program_suffix=
 
 case $libdir in
   '${exec_prefix}/lib')
-    libdir=$libdir/php
+    libdir=$libdir/php5
     ;;
 esac
 case $datadir in
   '${prefix}/share')
-    datadir=$datadir/php
+    datadir=$datadir/php5
     ;;
 esac
 
@@ -1145,7 +1145,7 @@ EXPANDED_SYSCONFDIR=`eval echo $sysconfdir`
 EXPANDED_DATADIR=$datadir
 EXPANDED_PHP_CONFIG_FILE_PATH=`eval echo "$PHP_CONFIG_FILE_PATH"`
 EXPANDED_PHP_CONFIG_FILE_SCAN_DIR=`eval echo "$PHP_CONFIG_FILE_SCAN_DIR"`
-INCLUDE_PATH=.:$EXPANDED_PEAR_INSTALLDIR
+INCLUDE_PATH=.:$EXPANDED_PEAR_INSTALLDIR:/usr/share/pear
 
 exec_prefix=$old_exec_prefix
 libdir=$old_libdir
