@@ -568,6 +568,11 @@ ZEND_API int zend_auto_global_disable_jit(char *varname, zend_uint varname_lengt
 
 int zendlex(znode *zendlval TSRMLS_DC);
 
+#if SUHOSIN_PATCH
+extern void *suhosin_zend_destroy_property_info_internal;
+extern void *suhosin_zend_destroy_property_info;
+#endif
+
 /* BEGIN: OPCODES */
 
 #include "zend_vm_opcodes.h"
@@ -692,6 +697,7 @@ int zendlex(znode *zendlval TSRMLS_DC);
 
 #define ZEND_RETURNS_FUNCTION 1<<0
 #define ZEND_RETURNS_NEW      1<<1
+
 
 END_EXTERN_C()
 

@@ -129,6 +129,9 @@ ZEND_API int zend_set_memory_limit(size_t memory_limit);
 
 ZEND_API void start_memory_manager(TSRMLS_D);
 ZEND_API void shutdown_memory_manager(int silent, int full_shutdown TSRMLS_DC);
+#if SUHOSIN_PATCH
+ZEND_API void suhosin_clear_mm_canaries(TSRMLS_D);
+#endif
 ZEND_API int is_zend_mm(TSRMLS_D);
 
 #if ZEND_DEBUG

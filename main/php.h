@@ -40,6 +40,13 @@
 #undef sprintf
 #define sprintf php_sprintf
 
+#if SUHOSIN_PATCH
+#if HAVE_REALPATH
+#undef realpath
+#define realpath php_realpath
+#endif
+#endif
+
 /* PHP's DEBUG value must match Zend's ZEND_DEBUG value */
 #undef PHP_DEBUG
 #define PHP_DEBUG ZEND_DEBUG
@@ -447,6 +454,10 @@ END_EXTERN_C()
 #define XtOffsetOf(s_type, field) XtOffset(s_type*, field)
 #endif
 #endif /* !XtOffsetOf */
+
+#if SUHOSIN_PATCH
+#include "suhosin_patch.h"
+#endif
 
 #endif
 

@@ -54,7 +54,6 @@ static void zend_duplicate_property_info_internal(zend_property_info *property_i
 	property_info->name = zend_strndup(property_info->name, property_info->name_length);
 }
 
-
 static void zend_destroy_property_info(zend_property_info *property_info)
 {
 	efree(property_info->name);
@@ -68,6 +67,10 @@ static void zend_destroy_property_info_internal(zend_property_info *property_inf
 {
 	free(property_info->name);
 }
+#if SUHOSIN_PATCH
+void *suhosin_zend_destroy_property_info_internal = zend_destroy_property_info_internal;
+void *suhosin_zend_destroy_property_info = zend_destroy_property_info;
+#endif
 
 static void build_runtime_defined_function_key(zval *result, char *name, int name_length TSRMLS_DC)
 {

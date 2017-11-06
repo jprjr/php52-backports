@@ -90,6 +90,9 @@
 
 #include "SAPI.h"
 #include "rfc1867.h"
+#if SUHOSIN_PATCH
+#include "suhosin_globals.h"
+#endif
 /* }}} */
 
 #ifndef ZTS
@@ -1387,7 +1390,7 @@ void php_request_shutdown_for_exec(void *dummy)
 
 	/* used to close fd's in the 3..255 range here, but it's problematic
 	 */
-	shutdown_memory_manager(1, 1 TSRMLS_CC);
+	shutdown_memory_manager(1, 1 TSRMLS_CC);	
 }
 /* }}} */
 
@@ -1428,6 +1431,9 @@ void php_request_shutdown_for_hook(void *dummy)
 
 	zend_try {
 		shutdown_memory_manager(CG(unclean_shutdown), 0 TSRMLS_CC);
+#if SUHOSIN_PATCH
+		suhosin_clear_mm_canaries(TSRMLS_C);
+#endif
 	} zend_end_try();
 
 	zend_try {
@@ -1522,6 +1528,9 @@ void php_request_shutdown(void *dummy)
 	/* 11. Free Willy (here be crashes) */
 	zend_try {
 		shutdown_memory_manager(CG(unclean_shutdown) || !report_memleaks, 0 TSRMLS_CC);
+#if SUHOSIN_PATCH
+		suhosin_clear_mm_canaries(TSRMLS_C);
+#endif
 	} zend_end_try();
 
 	/* 12. Reset max_execution_time */
@@ -1681,6 +1690,9 @@ int php_module_startup(sapi_module_struct *sf, zend_module_entry *additional_mod
 #ifdef ZTS
 	tsrm_ls = ts_resource(0);
 #endif
+#if SUHOSIN_PATCH
+	suhosin_startup();
+#endif
 
 	module_shutdown = 0;
 	module_startup = 1;
@@ -1822,6 +1834,10 @@ int php_module_startup(sapi_module_struct *sf, zend_module_entry *additional_mod
 	REGISTER_MAIN_STRINGL_CONSTANT("PHP_CONFIG_FILE_PATH", PHP_CONFIG_FILE_PATH, strlen(PHP_CONFIG_FILE_PATH), CONST_PERSISTENT | CONST_CS);
 	REGISTER_MAIN_STRINGL_CONSTANT("PHP_CONFIG_FILE_SCAN_DIR", PHP_CONFIG_FILE_SCAN_DIR, sizeof(PHP_CONFIG_FILE_SCAN_DIR)-1, CONST_PERSISTENT | CONST_CS);
 	REGISTER_MAIN_STRINGL_CONSTANT("PHP_SHLIB_SUFFIX", PHP_SHLIB_SUFFIX, sizeof(PHP_SHLIB_SUFFIX)-1, CONST_PERSISTENT | CONST_CS);
+#if SUHOSIN_PATCH
+	REGISTER_MAIN_LONG_CONSTANT("SUHOSIN_PATCH", 1, CONST_PERSISTENT | CONST_CS);
+	REGISTER_MAIN_STRINGL_CONSTANT("SUHOSIN_PATCH_VERSION", SUHOSIN_PATCH_VERSION, sizeof(SUHOSIN_PATCH_VERSION)-1, CONST_PERSISTENT | CONST_CS);
+#endif
 	REGISTER_MAIN_STRINGL_CONSTANT("PHP_EOL", PHP_EOL, sizeof(PHP_EOL)-1, CONST_PERSISTENT | CONST_CS);
 	REGISTER_MAIN_LONG_CONSTANT("PHP_INT_MAX", LONG_MAX, CONST_PERSISTENT | CONST_CS);
 	REGISTER_MAIN_LONG_CONSTANT("PHP_INT_SIZE", sizeof(long), CONST_PERSISTENT | CONST_CS);
@@ -1871,7 +1887,9 @@ int php_module_startup(sapi_module_struct *sf, zend_module_entry *additional_mod
 	module_startup = 0;
 
 	shutdown_memory_manager(1, 0 TSRMLS_CC);
-
+#if SUHOSIN_PATCH
+	suhosin_clear_mm_canaries(TSRMLS_C);
+#endif
 	/* we're done */
 	return SUCCESS;
 }
@@ -1930,6 +1948,9 @@ void php_module_shutdown(TSRMLS_D)
 #ifndef ZTS
 	zend_ini_shutdown(TSRMLS_C);
 	shutdown_memory_manager(CG(unclean_shutdown), 1 TSRMLS_CC);
+#if SUHOSIN_PATCH
+	suhosin_clear_mm_canaries(TSRMLS_C);
+#endif
 	core_globals_dtor(&core_globals TSRMLS_CC);
 #else
 	zend_ini_global_shutdown(TSRMLS_C);

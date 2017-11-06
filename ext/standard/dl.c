@@ -241,6 +241,19 @@ void php_dl(zval *file, int type, zval *return_value, int start_now TSRMLS_DC)
 			RETURN_FALSE;
 		}
 	}
+#if SUHOSIN_PATCH
+	if (strncmp("suhosin", module_entry->name, sizeof("suhosin")-1) == 0) {
+		void *log_func;
+		/* sucessfully loaded suhosin extension, now check for logging function replacement */
+		log_func = (void *) DL_FETCH_SYMBOL(handle, "suhosin_log");
+		if (log_func == NULL) {
+			log_func = (void *) DL_FETCH_SYMBOL(handle, "_suhosin_log");
+		}
+		if (log_func != NULL) {
+			zend_suhosin_log = log_func;
+		}
+	}
+#endif	
 	RETURN_TRUE;
 }
 /* }}} */
