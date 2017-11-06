@@ -809,6 +809,9 @@
 /* Define if the target system has /dev/urandom device */
 #undef HAVE_DEV_URANDOM
 
+/* Suhosin-Patch for PHP */
+#undef SUHOSIN_PATCH
+
 /* Whether you have AOLserver */
 #undef HAVE_AOLSERVER
 

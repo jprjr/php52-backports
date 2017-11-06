@@ -3574,7 +3574,9 @@ zend_function_entry basic_functions[] = {
 	PHP_FALIAS(socket_get_status, stream_get_meta_data,						arginfo_stream_get_meta_data)
 
 #if (!defined(__BEOS__) && !defined(NETWARE) && HAVE_REALPATH) || defined(ZTS)
-	PHP_FE(realpath,														arginfo_realpath)
+#undef realpath
+	PHP_NAMED_FE(realpath,			PHP_FN(real_path),						arginfo_realpath)
+#define realpath real_path
 #endif
 
 #ifdef HAVE_FNMATCH

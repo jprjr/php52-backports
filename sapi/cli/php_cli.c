@@ -804,8 +804,14 @@ int main(int argc, char *argv[])
 				}
 
 				request_started = 1;
-				php_printf("PHP %s (%s) (built: %s %s) %s\nCopyright (c) 1997-2010 The PHP Group\n%s",
-					PHP_VERSION, sapi_module.name, __DATE__, __TIME__,
+#if SUHOSIN_PATCH
+				php_printf("PHP %s with Suhosin-Patch %s (%s) (built: %s %s) %s\nCopyright (c) 1997-2009 The PHP Group\n%s", 
+					PHP_VERSION, SUHOSIN_PATCH_VERSION,
+#else
+			        php_printf("PHP %s (%s) (built: %s %s) %s\nCopyright (c) 1997-2009 The PHP Group\n%s",
+					PHP_VERSION,
+#endif
+					sapi_module.name, __DATE__, __TIME__,
 #if ZEND_DEBUG && defined(HAVE_GCOV)
 					"(DEBUG GCOV)",
 #elif ZEND_DEBUG

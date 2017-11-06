@@ -110,7 +110,7 @@ PHPAPI int php_check_specific_open_basedir(const char *basedir, const char *path
 
 	/* normalize and expand path */
 	if (expand_filepath(path, resolved_name TSRMLS_CC) == NULL) {
-		return -1;
+		return -2;
 	}
 
 	path_len = strlen(resolved_name);
@@ -189,6 +189,12 @@ PHPAPI int php_check_specific_open_basedir(const char *basedir, const char *path
 			}
 		}
 
+		if (resolved_name_len == resolved_basedir_len - 1) {
+			if (resolved_basedir[resolved_basedir_len - 1] == PHP_DIR_SEPARATOR) {
+				resolved_basedir_len--;
+			}
+		}
+
 		/* Check the path */
 #if defined(PHP_WIN32) || defined(NETWARE)
 		if (strncasecmp(resolved_basedir, resolved_name, resolved_basedir_len) == 0) {
@@ -217,7 +223,7 @@ PHPAPI int php_check_specific_open_basedir(const char *basedir, const char *path
 		}
 	} else {
 		/* Unable to resolve the real path, return -1 */
-		return -1;
+		return -3;
 	}
 }
 /* }}} */
@@ -236,21 +242,43 @@ PHPAPI int php_check_open_basedir_ex(const char *path, int warn TSRMLS_DC)
 		char *pathbuf;
 		char *ptr;
 		char *end;
+		char path_copy[MAXPATHLEN];
+		int path_len;
+
+		/* Special case path ends with a trailing slash */
+		path_len = strlen(path);
+		if (path_len >= MAXPATHLEN) {
+			errno = EPERM; /* we deny permission to open it */
+			return -1;
+		}
+		if (path_len > 0 && path[path_len-1] == PHP_DIR_SEPARATOR) {
+			memcpy(path_copy, path, path_len+1);
+			while (path_len > 1 && path_copy[path_len-1] == PHP_DIR_SEPARATOR) path_len--;
+			path_copy[path_len] = '\0';
+			path = (const char *)&path_copy;
+		}
 
 		pathbuf = estrdup(PG(open_basedir));
 
 		ptr = pathbuf;
 
 		while (ptr && *ptr) {
+			int res;
 			end = strchr(ptr, DEFAULT_DIR_SEPARATOR);
 			if (end != NULL) {
 				*end = '\0';
 				end++;
 			}
 
-			if (php_check_specific_open_basedir(ptr, path TSRMLS_CC) == 0) {
+			res = php_check_specific_open_basedir(ptr, path TSRMLS_CC);
+			if (res == 0) {
 				efree(pathbuf);
 				return 0;
+			}
+			if (res == -2) {
+				efree(pathbuf);
+				errno = EPERM;
+				return -1;
 			}
 
 			ptr = end;

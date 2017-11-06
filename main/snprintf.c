@@ -1077,7 +1077,11 @@ static int format_converter(register buffy * odp, const char *fmt, va_list ap) /
 
 
 				case 'n':
+#if SUHOSIN_PATCH
+					zend_suhosin_log(S_MISC, "'n' specifier within format string");
+#else
 					*(va_arg(ap, int *)) = cc;
+#endif
 					goto skip_output;
 
 					/*

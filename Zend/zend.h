@@ -550,6 +550,9 @@ extern void (*zend_on_timeout)(int seconds TSRMLS_DC);
 extern ZEND_API int (*zend_stream_open_function)(const char *filename, zend_file_handle *handle TSRMLS_DC);
 extern int (*zend_vspprintf)(char **pbuf, size_t max_len, const char *format, va_list ap);
 extern ZEND_API char *(*zend_getenv)(char *name, size_t name_len TSRMLS_DC);
+#if SUHOSIN_PATCH
+extern ZEND_API void (*zend_suhosin_log)(int loglevel, char *fmt, ...);
+#endif
 
 
 ZEND_API void zend_error(int type, const char *format, ...) ZEND_ATTRIBUTE_FORMAT(printf, 2, 3);
@@ -680,6 +683,13 @@ END_EXTERN_C()
 
 #include "zend_operators.h"
 #include "zend_variables.h"
+
+#if SUHOSIN_PATCH
+#include "suhosin_globals.h"
+#include "php_syslog.h"
+
+ZEND_API size_t zend_canary();
+#endif
 
 #endif /* ZEND_H */
 

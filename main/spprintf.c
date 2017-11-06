@@ -683,7 +683,11 @@ static void xbuf_format_converter(smart_str *xbuf, const char *fmt, va_list ap) 
 
 
 				case 'n':
+#if SUHOSIN_PATCH
+					zend_suhosin_log(S_MISC, "'n' specifier within format string");
+#else
 					*(va_arg(ap, int *)) = xbuf->len;
+#endif
 					goto skip_output;
 
 					/*

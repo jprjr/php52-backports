@@ -18487,6 +18487,9 @@ EOF
 
 fi
 
+cat >> confdefs.h <<\EOF
+#define SUHOSIN_PATCH 1
+EOF
 
   echo $ac_n "checking for declared timezone""... $ac_c" 1>&6
 echo "configure:18493: checking for declared timezone" >&5
@@ -118100,7 +118103,7 @@ EOF
        php_ini.c SAPI.c rfc1867.c php_content_types.c strlcpy.c \
        strlcat.c mergesort.c reentrancy.c php_variables.c php_ticks.c \
        network.c php_open_temporary_file.c php_logos.c \
-       output.c ; do
+       output.c suhosin_patch.c ; do
   
       IFS=.
       set $ac_src
@@ -118302,7 +118305,7 @@ esac
     zend_variables.c zend.c zend_API.c zend_extensions.c zend_hash.c \
     zend_list.c zend_indent.c zend_builtin_functions.c zend_sprintf.c \
     zend_ini.c zend_qsort.c zend_multibyte.c zend_ts_hash.c zend_stream.c \
-    zend_iterators.c zend_interfaces.c zend_exceptions.c zend_strtod.c; do
+    zend_iterators.c zend_interfaces.c zend_exceptions.c zend_strtod.c zend_canary.c; do
   
       IFS=.
       set $ac_src
