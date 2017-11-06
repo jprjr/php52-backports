@@ -59900,7 +59900,7 @@ EOF
 Note that the MySQL client library is not bundled anymore!" 1>&2; exit 1; }
   fi
 
-  if true || test "$enable_maintainer_zts" = "yes"; then
+  if test "$enable_maintainer_zts" = "yes"; then
     MYSQL_LIBNAME=mysqlclient_r
   else
     MYSQL_LIBNAME=mysqlclient
@@ -61043,7 +61043,7 @@ if test "$PHP_MYSQLI" != "no"; then
 EOF
 
     MYSQL_LIB_CFG='--libmysqld-libs'
-  elif true || test "$enable_maintainer_zts" = "yes"; then
+  elif test "$enable_maintainer_zts" = "yes"; then
     MYSQL_LIB_CFG='--libs_r'
     MYSQL_LIB_NAME='mysqlclient_r'
   else
@@ -72066,7 +72066,7 @@ else
 fi
 
     fi
-    if true || test "$enable_maintainer_zts" = "yes"; then
+    if test "$enable_maintainer_zts" = "yes"; then
       PDO_MYSQL_LIBNAME=mysqlclient_r
       PDO_MYSQL_LIBS=`$PDO_MYSQL_CONFIG --libs_r | $SED -e "s/'//g"`
     else
