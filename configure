@@ -53629,14 +53629,14 @@ EOF
     esac
   done
 
-  echo $ac_n "checking for sasl_version in -lldap""... $ac_c" 1>&6
-echo "configure:53634: checking for sasl_version in -lldap" >&5
-ac_lib_var=`echo ldap'_'sasl_version | sed 'y%./+-%__p_%'`
+  echo $ac_n "checking for sasl_version in -lsasl2""... $ac_c" 1>&6
+echo "configure:53634: checking for sasl_version in -lsasl2" >&5
+ac_lib_var=`echo sasl2'_'sasl_version | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   ac_save_LIBS="$LIBS"
-LIBS="-lldap  $LIBS"
+LIBS="-lsasl2  $LIBS"
 cat > conftest.$ac_ext <<EOF
 #line 53642 "configure"
 #include "confdefs.h"
@@ -53807,7 +53807,7 @@ else
 
     LDFLAGS=$save_old_LDFLAGS
     ext_shared=$save_ext_shared
-    unset ac_cv_lib_ldap_sasl_version
+    unset ac_cv_lib_sasl2_sasl_version
     
     { echo "configure: error: LDAP SASL check failed. Please check config.log for more information." 1>&2; exit 1; }
   
