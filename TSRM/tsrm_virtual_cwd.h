@@ -139,22 +139,6 @@ typedef struct _cwd_state {
 
 typedef int (*verify_path_func)(const cwd_state *);
 
-#ifndef HAVE_STRLCPY
-CWD_API size_t php_strlcpy(char *dst, const char *src, size_t siz);
-#undef strlcpy
-#define strlcpy php_strlcpy
-#endif
-
-#ifndef HAVE_STRLCAT
-CWD_API size_t php_strlcat(char *dst, const char *src, size_t siz);
-#undef strlcat
-#define strlcat php_strlcat
-#endif
-
-
-#if SUHOSIN_PATCH
-CWD_API char *php_realpath(const char *path, char *resolved);
-#endif
 CWD_API void virtual_cwd_startup(void);
 CWD_API void virtual_cwd_shutdown(void);
 CWD_API char *virtual_getcwd_ex(size_t *length TSRMLS_DC);

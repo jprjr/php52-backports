@@ -2410,7 +2410,7 @@ out:
 #if (!defined(__BEOS__) && !defined(NETWARE) && HAVE_REALPATH) || defined(ZTS)
 /* {{{ proto string realpath(string path)
    Return the resolved path */
-PHP_FUNCTION(real_path)
+PHP_FUNCTION(realpath)
 {
 	zval **path;
 	char resolved_path_buff[MAXPATHLEN];

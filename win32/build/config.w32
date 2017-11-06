@@ -305,7 +305,7 @@ ADD_SOURCES("Zend", "zend_language_parser.c zend_language_scanner.c \
 	zend_sprintf.c zend_ini.c zend_qsort.c zend_multibyte.c zend_ts_hash.c \
 	zend_stream.c zend_iterators.c zend_interfaces.c zend_objects.c \
 	zend_object_handlers.c zend_objects_API.c \
-	zend_default_classes.c zend_execute.c zend_strtod.c zend_canary.c");
+	zend_default_classes.c zend_execute.c zend_strtod.c");
 
 ADD_SOURCES("main", "main.c snprintf.c spprintf.c safe_mode.c fopen_wrappers.c \
 	php_scandir.c php_ini.c SAPI.c rfc1867.c php_content_types.c strlcpy.c \
@@ -353,8 +353,6 @@ if (PHP_ZEND_MULTIBYTE == "yes") {
 
 AC_DEFINE('HAVE_USLEEP', 1);
 AC_DEFINE('HAVE_STRCOLL', 1);
-
-AC_DEFINE('SUHOSIN_PATCH', 1);
 
 /* For snapshot builders, where can we find the additional
  * files that make up the snapshot template? */

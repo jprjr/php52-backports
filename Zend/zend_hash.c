@@ -20,7 +20,6 @@
 /* $Id: zend_hash.c 298914 2010-05-03 16:36:04Z felipe $ */
 
 #include "zend.h"
-#include "zend_compile.h"
 
 #define CONNECT_TO_BUCKET_DLLIST(element, list_head)		\
 	(element)->pNext = (list_head);							\
@@ -133,189 +132,7 @@ ZEND_API ulong zend_hash_func(char *arKey, uint nKeyLength)
 		(p)->pDataPtr=NULL;												\
 	}
 
-#if SUHOSIN_PATCH
-#ifdef ZTS
-MUTEX_T zend_hash_dprot_mx_reader;
-MUTEX_T zend_hash_dprot_mx_writer;
-unsigned int zend_hash_dprot_reader;
-#endif
-unsigned int zend_hash_dprot_counter;
-unsigned int zend_hash_dprot_curmax;
-dtor_func_t *zend_hash_dprot_table = NULL;
 
-static void zend_hash_dprot_begin_read()
-{
-#ifdef ZTS
-	tsrm_mutex_lock(zend_hash_dprot_mx_reader);
-	if ((++(zend_hash_dprot_reader)) == 1) {
-		tsrm_mutex_lock(zend_hash_dprot_mx_writer);
-	}
-	tsrm_mutex_unlock(zend_hash_dprot_mx_reader);
-#endif
-}
-
-static void zend_hash_dprot_end_read()
-{
-#ifdef ZTS
-	tsrm_mutex_lock(zend_hash_dprot_mx_reader);
-	if ((--(zend_hash_dprot_reader)) == 0) {
-		tsrm_mutex_unlock(zend_hash_dprot_mx_writer);
-	}
-	tsrm_mutex_unlock(zend_hash_dprot_mx_reader);
-#endif
-}
-
-static void zend_hash_dprot_begin_write()
-{
-#ifdef ZTS
-	tsrm_mutex_lock(zend_hash_dprot_mx_writer);
-#endif
-}
-
-static void zend_hash_dprot_end_write()
-{
-#ifdef ZTS
-	tsrm_mutex_unlock(zend_hash_dprot_mx_writer);
-#endif
-}
-
-/*ZEND_API void zend_hash_dprot_dtor()
-{
-#ifdef ZTS
-	tsrm_mutex_free(zend_hash_dprot_mx_reader);
-	tsrm_mutex_free(zend_hash_dprot_mx_writer);
-#endif	
-	free(zend_hash_dprot_table);
-}*/
-
-static void zend_hash_add_destructor(dtor_func_t pDestructor)
-{
-	int left, right, mid;
-	zend_bool found = 0;
-	unsigned long value;
-	
-	if (pDestructor == NULL || pDestructor == ZVAL_PTR_DTOR || pDestructor == ZVAL_INTERNAL_PTR_DTOR
-	    || pDestructor == ZEND_FUNCTION_DTOR || pDestructor == ZEND_CLASS_DTOR) {
-		return;
-	}
-	
-	if (zend_hash_dprot_table == NULL) {
-#ifdef ZTS
-		zend_hash_dprot_mx_reader = tsrm_mutex_alloc();
-		zend_hash_dprot_mx_writer = tsrm_mutex_alloc();
-		zend_hash_dprot_reader = 0;
-#endif	
-		zend_hash_dprot_counter = 0;
-		zend_hash_dprot_curmax = 256;
-		zend_hash_dprot_table = (dtor_func_t *) malloc(256 * sizeof(dtor_func_t));
-	}
-	
-	zend_hash_dprot_begin_write();
-
-	if (zend_hash_dprot_counter == 0) {
-		zend_hash_dprot_counter++;
-		zend_hash_dprot_table[0] = pDestructor;
-	} else {
-		value = (unsigned long) pDestructor;
-		left = 0;
-		right = zend_hash_dprot_counter-1;
-		mid = 0;
-		
-		while (left < right) {
-			mid = (right - left) >> 1;
-			mid += left;
-			if ((unsigned long)zend_hash_dprot_table[mid] == value) {
-				found = 1;
-				break;
-			}
-			if (value < (unsigned long)zend_hash_dprot_table[mid]) {
-				right = mid-1;
-			} else {
-				left = mid+1;
-			}
-		}
-		if ((unsigned long)zend_hash_dprot_table[left] == value) {
-			found = 1;
-		}
-		
-		if (!found) {
-		
-			if (zend_hash_dprot_counter >= zend_hash_dprot_curmax) {
-				zend_hash_dprot_curmax += 256;
-				zend_hash_dprot_table = (dtor_func_t *) realloc(zend_hash_dprot_table, zend_hash_dprot_curmax * sizeof(dtor_func_t));
-			}
-			
-			if ((unsigned long)zend_hash_dprot_table[left] < value) {
-				memmove(zend_hash_dprot_table+left+2, zend_hash_dprot_table+left+1, (zend_hash_dprot_counter-left-1)*sizeof(dtor_func_t));
-				zend_hash_dprot_table[left+1] = pDestructor;
-			} else {
-				memmove(zend_hash_dprot_table+left+1, zend_hash_dprot_table+left, (zend_hash_dprot_counter-left)*sizeof(dtor_func_t));
-				zend_hash_dprot_table[left] = pDestructor;
-			}
-
-			zend_hash_dprot_counter++;
-		}
-	}
-	
-	zend_hash_dprot_end_write();
-}
-
-static void zend_hash_check_destructor(dtor_func_t pDestructor)
-{
-	unsigned long value;
-	
-	if (pDestructor == NULL || pDestructor == ZVAL_PTR_DTOR || pDestructor == ZVAL_INTERNAL_PTR_DTOR
-#ifdef ZEND_ENGINE_2
-		|| pDestructor == suhosin_zend_destroy_property_info_internal || pDestructor == suhosin_zend_destroy_property_info
-#endif
-	    || pDestructor == ZEND_FUNCTION_DTOR || pDestructor == ZEND_CLASS_DTOR) {
-		return;
-	}
-
-	zend_hash_dprot_begin_read();
-	
-	if (zend_hash_dprot_counter > 0) {
-		int left, right, mid;
-		zend_bool found = 0;
-	
-		value = (unsigned long) pDestructor;
-		left = 0;
-		right = zend_hash_dprot_counter-1;
-		
-		while (left < right) {
-			mid = (right - left) >> 1;
-			mid += left;
-			if ((unsigned long)zend_hash_dprot_table[mid] == value) {
-				found = 1;
-				break;
-			}
-			if (value < (unsigned long)zend_hash_dprot_table[mid]) {
-				right = mid-1;
-			} else {
-				left = mid+1;
-			}
-		}
-		if ((unsigned long)zend_hash_dprot_table[left] == value) {
-			found = 1;
-		}
-		
-		if (!found) {
-			zend_hash_dprot_end_read();
-		
-			zend_suhosin_log(S_MEMORY, "possible memory corruption detected - unknown Hashtable destructor");
-			exit(1);
-			return;
-		}
-	
-	}
-	
-	zend_hash_dprot_end_read();
-}
-
-#else
-#define zend_hash_add_destructor(pDestructor) do {} while(0)
-#define zend_hash_check_destructor(pDestructor) do {} while(0)
-#endif
 
 ZEND_API int _zend_hash_init(HashTable *ht, uint nSize, hash_func_t pHashFunction, dtor_func_t pDestructor, zend_bool persistent ZEND_FILE_LINE_DC)
 {
@@ -336,7 +153,6 @@ ZEND_API int _zend_hash_init(HashTable *ht, uint nSize, hash_func_t pHashFunctio
 
 	ht->nTableMask = ht->nTableSize - 1;
 	ht->pDestructor = pDestructor;
-	zend_hash_add_destructor(pDestructor);
 	ht->arBuckets = NULL;
 	ht->pListHead = NULL;
 	ht->pListTail = NULL;
@@ -414,8 +230,6 @@ ZEND_API int _zend_hash_add_or_update(HashTable *ht, char *arKey, uint nKeyLengt
 					return FAILURE;
 				}
 #endif
-				
-				zend_hash_check_destructor(ht->pDestructor);
 				if (ht->pDestructor) {
 					ht->pDestructor(p->pData);
 				}
@@ -481,7 +295,6 @@ ZEND_API int _zend_hash_quick_add_or_update(HashTable *ht, char *arKey, uint nKe
 					return FAILURE;
 				}
 #endif
-				zend_hash_check_destructor(ht->pDestructor);
 				if (ht->pDestructor) {
 					ht->pDestructor(p->pData);
 				}
@@ -557,7 +370,6 @@ ZEND_API int _zend_hash_index_update_or_next_insert(HashTable *ht, ulong h, void
 				return FAILURE;
 			}
 #endif
-			zend_hash_check_destructor(ht->pDestructor);
 			if (ht->pDestructor) {
 				ht->pDestructor(p->pData);
 			}
@@ -681,7 +493,6 @@ ZEND_API int zend_hash_del_key_or_index(HashTable *ht, char *arKey, uint nKeyLen
 			if (ht->pInternalPointer == p) {
 				ht->pInternalPointer = p->pListNext;
 			}
-			zend_hash_check_destructor(ht->pDestructor);
 			if (ht->pDestructor) {
 				ht->pDestructor(p->pData);
 			}
@@ -706,8 +517,6 @@ ZEND_API void zend_hash_destroy(HashTable *ht)
 	IS_CONSISTENT(ht);
 
 	SET_INCONSISTENT(HT_IS_DESTROYING);
-
-	zend_hash_check_destructor(ht->pDestructor);
 
 	p = ht->pListHead;
 	while (p != NULL) {
@@ -734,8 +543,6 @@ ZEND_API void zend_hash_clean(HashTable *ht)
 	IS_CONSISTENT(ht);
 
 	SET_INCONSISTENT(HT_CLEANING);
-
-	zend_hash_check_destructor(ht->pDestructor);
 
 	p = ht->pListHead;
 	while (p != NULL) {
@@ -800,7 +607,6 @@ static Bucket *zend_hash_apply_deleter(HashTable *ht, Bucket *p)
 	ht->nNumOfElements--;
 	HANDLE_UNBLOCK_INTERRUPTIONS();
 
-	zend_hash_check_destructor(ht->pDestructor);
 	if (ht->pDestructor) {
 		ht->pDestructor(p->pData);
 	}

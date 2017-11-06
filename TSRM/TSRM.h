@@ -38,13 +38,6 @@ typedef long tsrm_intptr_t;
 typedef unsigned long tsrm_uintptr_t;
 #endif
 
-#if SUHOSIN_PATCH
-# if HAVE_REALPATH
-#  undef realpath
-#  define realpath php_realpath
-# endif
-#endif
-
 /* Only compile multi-threading functions if we're in ZTS mode */
 #ifdef ZTS
 
@@ -99,7 +92,6 @@ typedef void (*ts_allocate_ctor)(void *, void ***);
 typedef void (*ts_allocate_dtor)(void *, void ***);
 
 #define THREAD_HASH_OF(thr,ts)  (unsigned long)thr%(unsigned long)ts
-
 
 #ifdef __cplusplus
 extern "C" {
