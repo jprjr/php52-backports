@@ -5,7 +5,7 @@ Bug #20539 (PHP CLI Segmentation Fault)
 --INI--
 session.auto_start=1
 session.save_handler=files
-session.save_path=./tests/basic/
+session.save_path=temp_session_store
 --FILE--
 <?php
 	print "good :)\n";
